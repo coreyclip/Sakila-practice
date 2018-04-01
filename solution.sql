@@ -80,3 +80,22 @@ FROM staff s
 JOIN payment p ON 
 s.staff_id = p.staff_id
 Group by  s.last_name;
+
+-- 6c. List each film and the number of actors who are listed for that film. 
+SELECT f.title,  COUNT(a.actor_id) AS 'number of actors'
+FROM film f 
+JOIN film_actor a ON 
+f.film_id = a.film_id
+Group by (f.title);
+
+-- 6d. List each film and the number of actors who are listed for that film. Use tables `film_actor` and `film`. Use inner join.
+SELECT COUNT(f.title) AS 'inventory stock for Hunchback' 
+FROM inventory i 
+JOIN film f on 
+f.film_id = i.film_id
+WHERE f.title = 'Hunchback Impossible';
+
+-- 6e. Using the tables `payment` and `customer` and the `JOIN` command, list the total paid by each customer. List the customers alphabetically by last name
+SELECT CONCAT(c.first_name, c.last_name) as 'customer', SUM(p.amount)
+FROM customer c 
+JOIN payment p 
