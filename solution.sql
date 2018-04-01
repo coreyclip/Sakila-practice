@@ -96,6 +96,19 @@ f.film_id = i.film_id
 WHERE f.title = 'Hunchback Impossible';
 
 -- 6e. Using the tables `payment` and `customer` and the `JOIN` command, list the total paid by each customer. List the customers alphabetically by last name
-SELECT CONCAT(c.first_name, c.last_name) as 'customer', SUM(p.amount)
+SELECT CONCAT(c.first_name,' ', c.last_name) as customer,
+SUM(p.amount) as payment
 FROM customer c 
-JOIN payment p 
+JOIN payment p ON
+c.customer_id = p.customer_id
+Group by customer 
+ORDER BY customer;
+
+-- 7a. Use subqueries to display the titles of movies starting with the letters `K` and `Q` whose language is English.
+SELECT title FROM film WHERE language_id IN 
+  (SELECT language_id FROM language WHERE name = 'English')
+  AND title like "Q%" OR title like "K%"; 
+
+-- 7b. Use subqueries to display all actors who appear in the film `Alone Trip`.
+SELECT Count(actor_id) as 'number of actors' WHERE film_id IN   
+    (SELECT film_id FROM film WHERE title = 'Alone Trip')
