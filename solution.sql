@@ -112,3 +112,16 @@ SELECT title FROM film WHERE language_id IN
 -- 7b. Use subqueries to display all actors who appear in the film `Alone Trip`.
 SELECT Count(actor_id) as 'number of actors' WHERE film_id IN   
     (SELECT film_id FROM film WHERE title = 'Alone Trip')
+
+-- 7c. You want to run an email marketing campaign in Canada, for which you will need the names and email addresses of all Canadian customers. Use joins to retrieve this information.
+SELECT CONCAT(first_name,' ', last_name) as name, email
+from customer where address_id in  
+  (SELECT address_id from address where city_id IN  
+    (SELECT city_id from city where country_id IN
+        (SELECT country_id FROM country WHERE country = 'Canada'
+          ) 
+        )
+    );
+
+--  7d. Sales have been lagging among young families, and you wish to target all family movies for a promotion. Identify all movies categorized as famiy films.
+  
