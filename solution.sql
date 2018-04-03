@@ -124,4 +124,20 @@ from customer where address_id in
     );
 
 --  7d. Sales have been lagging among young families, and you wish to target all family movies for a promotion. Identify all movies categorized as famiy films.
-  
+SELECT title FROM film WHERE film_id IN(
+	SELECT film_id from film_category WHERE category_id IN(
+		(SELECT category_id FROM category WHERE name = 'family')
+	)
+)
+
+-- 7e. Display the most frequently rented movies in descending order.
+SELECT title, COUNT(film_id) as 'rentals' FROM film WHERE film_id IN(
+	SELECT film_id from inventory WHERE inventory_id IN (
+		(SELECT inventory_id FROM rental)
+    )
+)    
+GROUP BY film_id
+ORDER BY COUNT(film_id) DESC;
+
+-- 7f. Write a query to display how much business, in dollars, each store brought in.
+
