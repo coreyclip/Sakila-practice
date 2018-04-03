@@ -131,13 +131,12 @@ SELECT title FROM film WHERE film_id IN(
 )
 
 -- 7e. Display the most frequently rented movies in descending order.
-SELECT title, COUNT(film_id) as 'rentals' FROM film WHERE film_id IN(
-	SELECT film_id from inventory WHERE inventory_id IN (
-		(SELECT inventory_id FROM rental)
-    )
-)    
-GROUP BY film_id
-ORDER BY COUNT(film_id) DESC;
+SELECT f.title, COUNT(f.title) as rentals from film f 
+JOIN 
+	(SELECT r.rental_id, i.film_id FROM rental r 
+    JOIN 
+    inventory i ON i.inventory_id = r.inventory_id) a
+    ON a.film_id = f.film_id GROUP BY f.title ORDER BY rentals DESC;
 
 -- 7f. Write a query to display how much business, in dollars, each store brought in.
 SELECT address, SUM(amount) as 'total business' from payment p JOIN(		
