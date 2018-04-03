@@ -140,4 +140,65 @@ GROUP BY film_id
 ORDER BY COUNT(film_id) DESC;
 
 -- 7f. Write a query to display how much business, in dollars, each store brought in.
+SELECT address, SUM(amount) as 'total business' from payment p JOIN(		
+	SELECT address, rental_id FROM rental r JOIN( 
+		SELECT address, inventory_id FROM inventory i
+			JOIN (
+				SELECT s.store_id as store_id, a.address FROM store s 
+				JOIN address a ON a.address_id = s.address_id) b
+				ON i.store_id = b.store_id
+				) c ON c.inventory_id = r.inventory_id)
+                d ON d.rental_id = p.rental_id GROUP BY address;
 
+-- 7g. Write a query to display for each store its store ID, city, and country.
+SELECT d.store_id, d.address, d.city, country.country from country
+JOIN 
+	(SELECT b.store_id, b.address, c.city, c.country_id FROM city c 
+	JOIN 
+		(SELECT s.store_id, a.address, a.city_id from store s 
+		JOIN address a ON s.address_id = a.address_id) b ON (b.city_id = c.city_id)
+		) d ON (d.country_id = country.country_id);
+
+-- 7h. List the top five genres in gross revenue in descending order. 
+-- (**Hint**: you may need to use the following tables: 
+-- category, film_category, inventory, payment, and rental.)
+SELECT cat.name as category, SUM(d.revenue) as revenue from category cat 
+JOIN
+    (SELECT catf.category_id, c.revenue FROM film_category catf 
+	JOIN 
+		(SELECT i.film_id, b.revenue FROM inventory i 
+		JOIN 
+			(SELECT r.inventory_id, a.revenue from rental r 
+			JOIN 
+				(SELECT p.rental_id, p.amount as revenue FROM payment p) a 
+				ON a.rental_id = r.rental_id) b
+			ON b.inventory_id = i.inventory_id) c
+		ON c.film_id = catf.film_id) d 
+	ON d.category_id = cat.category_id GROUP BY cat.name
+  ORDER BY revenue DESC
+  LIMIT 5;   
+
+
+-- 8a. create a view of the above query
+CREATE VIEW top_five_genres AS 
+SELECT cat.name as category, SUM(d.revenue) as revenue from category cat 
+JOIN
+    (SELECT catf.category_id, c.revenue FROM film_category catf 
+	JOIN 
+		(SELECT i.film_id, b.revenue FROM inventory i 
+		JOIN 
+			(SELECT r.inventory_id, a.revenue from rental r 
+			JOIN 
+				(SELECT p.rental_id, p.amount as revenue FROM payment p) a 
+				ON a.rental_id = r.rental_id) b
+			ON b.inventory_id = i.inventory_id) c
+		ON c.film_id = catf.film_id) d 
+	ON d.category_id = cat.category_id GROUP BY cat.name
+  ORDER BY revenue DESC
+  LIMIT 5;   
+
+-- * 8b. How would you display the view that you created in 8a?
+SELECT * FROM sakila.top_five_genres;
+
+-- 8c. How would you delete this view
+DROP VIEW top_five_genres
