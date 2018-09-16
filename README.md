@@ -97,8 +97,74 @@ That would look something like this
 SELECT amount from payment WHERE amount >= 1
 ```
 
+Additionally with string columns we can use the keyword ```LIKE``` and what is called a wildcard with ```WHERE``` to approximate the values we want returned. In SQL wildcards are indicated as '%' 
 
+```sql
+SELECT actor_id, first_name, last_name FROM actor WHERE last_name LIKE '%GEN%';
+```
+
+The above query returns rows in the actor table where the last_name column values have *GEN* somewhere in the last_name value. We would get values like this: 
+
+```table
+VIVIEN	BERGEN
+JODIE	DEGENERES
+GINA	DEGENERES
+NICK	DEGENERES
+```
+The wildcard %GEN% matches any character beginning or ending around the values GEN. The existance of a % tells SQL to match any character in that location
+
+Try out the following patterns to get a feel for what wildcards do. 
+
+Only last names starting with 'A'
+```sql
+SELECT actor_id, first_name, last_name FROM actor WHERE last_name LIKE 'A%';
+```
+
+Only last names ending with 'T'
+```sql
+SELECT actor_id, first_name, last_name FROM actor WHERE last_name LIKE '%T';
+```
+
+Say you want to filter by more than one condition, that where you could start using the ```AND``` keyword
+
+```sql
+SELECT first_name, last_name FROM actor WHERE last_name LIKE '%GEN%' 
+AND first_name LIKE 'J%';
+```
+
+This will only return rows where the last name matches the pattern %GEN% **and** the first name matches 'J%' (starts with 'J')
+
+The keyword ```OR``` behaves exactly as you may expect. bellow we get last names starting with 'A' and 'B'
+
+```sql
+SELECT first_name, last_name FROM actor WHERE last_name LIKE 'A%' 
+OR last_name LIKE 'B%';
+```
+Note the bellow query may seem correct but is likely not doing what you actually want it to do
+```sql
+SELECT first_name, last_name FROM actor WHERE last_name LIKE 'A%' OR 'B%';
+```
+This won't match last names starting with B it instead is matching the pattern ```LIKE 'A%' ``` and is confused as to what to do with 'B%' 
+
+You may want to do something like the bellow:
+```sql
+SELECT country_id, country from country WHERE
+country = 'Afghanistan' OR 'Bangladesh' OR 'China';
+```
+This will only output 'Afghanistan' instead to get the other two countries we should use ```IN```
+
+```sql
+SELECT country_id, country from country WHERE
+country IN('Afghanistan', 'Bangladesh','China');
+```
+
+## Altering Tables
+Coming soon...
+
+
+
+---
 
 ## Further notes
 
-As a **declarative** programming language, we have to be very specific in what we tell SQL to do. Unlike Python or Javascript which are **imperative** languages and therefore are used to detail out to the computer what actions to perform. 
+As a **declarative** programming language, we have to be very specific in what we tell SQL to do. Unlike Python or Javascript which are **imperative** languages and therefore are used to detail out to the computer what actions to perform. SQL being a **declarative** language means that you are really just asking SQL what to give you rather than what to do. The distinction may be odd to grasp but try to keep it in mind when SQL does something you didn't expect. 
