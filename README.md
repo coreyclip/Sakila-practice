@@ -51,9 +51,23 @@ Adding formatting to SQL query results happens within the `SELECT` Statement
 ```sql
 USE sakila;
 
-SELECT UPPER(CONCAT(first_name,' ', last_name)) AS 'Actor Name' FROM actor;
+SELECT UPPER(CONCAT(first_name,' ', last_name)) AS 'Actor Name' FROM actor LIMIT 10;
 ```
-
+Note: LIMIT simply restricts the number of results a query returns, in this case only the first 10 records
++---------------------+
+| Actor Name          |
++---------------------+
+| PENELOPE GUINESS    |
+| NICK WAHLBERG       |
+| ED CHASE            |
+| JENNIFER DAVIS      |
+| JOHNNY LOLLOBRIGIDA |
+| BETTE NICHOLSON     |
+| GRACE MOSTEL        |
+| MATTHEW JOHANSSON   |
+| JOE SWANK           |
+| CHRISTIAN GABLE     |
++---------------------+
 This query returns our actors' first and last names together as one column called `Actor Name` and makes them upper case.
 
 - `CONCAT` takes in any number of columns or variables and joins them all together into one string.
@@ -66,7 +80,7 @@ Here's another common case where you'd want to format a query output
 SELECT
     CONCAT('$',amount) AS 'Payment Amount',
     DATE_FORMAT(payment_date,"%d/%m/%Y") AS 'Payment Date'
-FROM sakila.payment;
+FROM sakila.payment LIMIT 10;
 ```
 
 Typically we store monetary values in SQL databases as floating point numbers and don't keep '$' symbols in our database, as doing so would convert our numbers into strings and then we wouldn't be able to do numerical operations on them! But for situations like financial reporting those '$' are commonly requested. So it's best practice to just bring them in with a `CONCAT` function.
@@ -84,6 +98,11 @@ SELECT actor_id, first_name, last_name
 FROM actor
 WHERE first_name = 'Joe';
 ```
++----------|------------|-----------+
+| actor_id | first_name | last_name |
++----------|------------|-----------+
+|        9 | JOE        | SWANK     |
++----------|------------|-----------+
 
 This will return rows **if and only if** the column value first_name holds the value 'Joe'
 
@@ -103,15 +122,21 @@ With numerical values you can additionally use the operators
 That would look something like this
 
 ```sql
-SELECT amount from payment WHERE amount >= 1
+SELECT * FROM payment WHERE amount >= 11;
 ```
-
 Additionally with string columns we can use the keyword `LIKE` and what is called a wildcard with `WHERE` to approximate the values we want returned. In SQL wildcards are indicated as '%'
 
 ```sql
 SELECT actor_id, first_name, last_name FROM actor WHERE last_name LIKE '%GEN%';
 ```
-
++----------|------------|----------------+
+| actor_id | first_name | last_name |
++----------|------------|----------------+
+|       14 | VIVIEN     | BERGEN    |
+|       41 | JODIE      | DEGENERES |
+|      107 | GINA       | DEGENERES |
+|      166 | NICK       | DEGENERES |
++----------|------------|-----------------+
 The above query returns rows in the actor table where the last_name column values have _GEN_ somewhere in the last_name value. We would get values like this:
 
 ```table
@@ -158,6 +183,17 @@ Note the bellow query may seem correct but is likely not doing what you actually
 ```sql
 SELECT first_name, last_name FROM actor WHERE last_name LIKE 'A%' OR 'B%';
 ```
++------------|-----------+
+| first_name | last_name |
++------------|-----------+
+| CHRISTIAN  | AKROYD    |
+| KIRSTEN    | AKROYD    |
+| DEBBIE     | AKROYD    |
+| CUBA       | ALLEN     |
+| KIM        | ALLEN     |
+| MERYL      | ALLEN     |
+| ANGELINA   | ASTAIRE   |
++------------|-----------+
 
 This won't match last names starting with B it instead is matching the pattern `LIKE 'A%'` and is confused as to what to do with 'B%'
 
@@ -167,6 +203,11 @@ You may want to do something like the bellow:
 SELECT country_id, country from country WHERE
 country = 'Afghanistan' OR 'Bangladesh' OR 'China';
 ```
++------------|-------------+
+| country_id | country     |
++------------|-------------+
+|          1 | Afghanistan |
++------------|-------------+
 
 This will only output 'Afghanistan' instead to get the other two countries we should use `IN`
 
@@ -174,10 +215,134 @@ This will only output 'Afghanistan' instead to get the other two countries we sh
 SELECT country_id, country from country WHERE
 country IN('Afghanistan', 'Bangladesh','China');
 ```
++------------|-------------+
+| country_id | country     |
++------------|-------------+
+|          1 | Afghanistan |
+|         12 | Bangladesh  |
+|         23 | China       |
++------------|-------------+
+
 
 ## Joining Tables
+ The concept of joining a table is what makes a MySQL and other SQL variants what we term a *relational database*. When we join two tables we are telling MySQL to link up two tables. This allows us to cross reference information across different tables which in turn lets us modularize our tables. 
+ 
+ So instead of keeping all the addresses of our staff in a staff table and all the addresses of our stores in another we can keep on strictly staff related columns in one table and store related in another. With both of these tables containing a *foreign key* to reference a table strictly related to addresses 
+ 
+ foreign key relationships in well designed databases can be spotted when you notice two tables with the same columns which usually have the phrase 'id' in them. 
+ 
+ The basic anatomy of a table join will look like this 
+ 
+ ```sql
+ SELECT * FROM [table] 
+ [kind of join] JOIN [other table] 
+ ON [table].[foreign key column] = [other table].[foreign key column]
+ ```
+ 
+ In our Sakila database we can run the follow query as an example of a simple table join 
+ ```sql
+SELECT s.first_name, s.last_name, a.address
+FROM staff s 
+JOIN address a ON 
+s.address_id = a.address_id;
+```
 
-Coming soon...
+ output: 
++------------|-----------|----------------------+
+| first_name | last_name | address              |
++------------|-----------|----------------------+
+| Mike       | Hillyer   | 23 Workhaven Lane    |
+| Jon        | Stephens  |1411 Lillydale Drive  |
++------------|-----------|----------------------+
+
+Joins come in three main varieties, and basically differ on how they handle missing data. 
+Say for example from the above query there were staff records that don't have a corresponding
+address record (missing an address_id record or the record isn't in the other table). Should SQL return the staff first_name and last_name and leave the address line blank or should it leave the address line blank?
+
+* LEFT JOIN: retains the table to the left of the join. In the above example it would retain the staff records 
+* RIGHT JOIN: retains the table to the right of the join. In the above example it would retain the address records
+* INNER JOIN: retains only records shared by both tables. So in the above example only records with an address_id in both tables would be included in the final result set. 
+
+In most cases, if the database has complete records the kind of join you use won't make much of a difference. But designing your queries to start with the table you want to retain all the records from and join tables of lesser importance later on with LEFT JOINS 
+
+## Aggregation Functions and Group By 
+SQL has a wide variety of functions for aggregating data like excel. SUM, AVG, MAX, MIN, COUNT all operate as expected. 
+```sql
+SELECT SUM(payment.amount) AS 'Total Payments After 2006' FROM payment
+WHERE payment_date >= '2006-01-01';
+```
++-------------------------------+
+| Total Payments After 2006 |
++-------------------------------+
+|                    514.18 |
++-------------------------------+
+
+Say you wanted to summarize the average sale amount by store. Joining and including the store table the ordinary way will yield an error if left unmodified. What you need to do is specify GROUP BY constraints within your query. See the following: 
+```sql
+SELECT address.address, AVG(payment.amount) AS 'Average Payments' FROM payment
+LEFT JOIN customer on customer.customer_id = payment.customer_id
+LEFT JOIN store on store.store_id = customer.store_id
+LEFT JOIN address on address.address_id = store.address_id
+GROUP BY address.address;
+```
++--------------------|----------------------------------+
+| address            |          Average Payments  |
++--------------------|----------------------------------+
+| 28 MySQL Boulevard |                  4.165866 |
+| 47 MySakila Drive  |                  4.229712 |
++--------------------|----------------------------------+
+
+The above query returns the Average payment amount *by store address*, MySQL knew to break it down in this manner because the address column in the address table has been fed into the GROUP BY statement. also note above how we Join multiple tables above, there really isn't any limit to the number of joins you can make in a single query, though things can get confusing if you take it to far. 
+
+You can GROUP BY multiple columns like in the following:
+
+```sql
+SELECT address.address, address.district, AVG(payment.amount) AS 'Average Payments' FROM payment
+LEFT JOIN customer on customer.customer_id = payment.customer_id
+LEFT JOIN store on store.store_id = customer.store_id
+LEFT JOIN address on address.address_id = store.address_id
+GROUP BY address.address, address.district;
+```
++--------------------|----------|--------------------------+
+| address            | district | Average Payments |
++--------------------|----------|--------------------------+
+| 28 MySQL Boulevard | QLD      |         4.165866 |
+| 47 MySakila Drive  | Alberta  |         4.229712 |
++--------------------|----------|--------------------------+
+## Subqueries 
+
+Subqueries refer to queries that get their results from other queries. In other words queries that query query results. One way to think of them, is a means breaking up queries into logical steps by creating on the fly tables you want to query without actually setting them up in the database. Typically one resorts to using subqueries when a succession of WHERE statements start to contridict each other or you simply can't figure out why a specific query isn't giving you the results you want
+
+Here's a basic simplified example.
+Say you wanted to grab all of the movies from the film table that are in english yet have titles that start with the letter K 
+you could acheive this with a sub query like this: 
+```sql
+SELECT title FROM film WHERE language_id IN 
+  (SELECT language_id FROM language WHERE name = 'English')
+  AND title like "K%"; 
+```
+
+A subquery is defined by ( ) with the query being placed between the paranthesis. To get an idea of what's going on here execute that inner subquery. 
+
+```sql
+  SELECT language_id FROM language WHERE name = 'English';
+```
++-------------+
+| language_id |
++-------------+
+|           1 |
++-------------+
+
+Basically the results of the above query acts as fill in for the IN statement in the outer query. Basically it results in a final query that's the equivalent of this:
+```sql
+SELECT title FROM film WHERE language_id IN 
+  (1)
+  AND title like "K%"; 
+```
+
+This is a very simply case of a subquery and could have been acheived via joining the language table to the film table on language_id but the basic idea carries over into real cases when you should use a subquery. 
+
+When tackling a very complex and intricate query problem, you can start by building a simple query that fills one of your requirements and then build up from there by querying this initial query as a subquery. 
 
 ---
 
