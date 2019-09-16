@@ -54,20 +54,7 @@ USE sakila;
 SELECT UPPER(CONCAT(first_name,' ', last_name)) AS 'Actor Name' FROM actor LIMIT 10;
 ```
 Note: LIMIT simply restricts the number of results a query returns, in this case only the first 10 records
-+---------------------+
-| Actor Name          |
-+---------------------+
-| PENELOPE GUINESS    |
-| NICK WAHLBERG       |
-| ED CHASE            |
-| JENNIFER DAVIS      |
-| JOHNNY LOLLOBRIGIDA |
-| BETTE NICHOLSON     |
-| GRACE MOSTEL        |
-| MATTHEW JOHANSSON   |
-| JOE SWANK           |
-| CHRISTIAN GABLE     |
-+---------------------+
+
 This query returns our actors' first and last names together as one column called `Actor Name` and makes them upper case.
 
 - `CONCAT` takes in any number of columns or variables and joins them all together into one string.
@@ -98,11 +85,6 @@ SELECT actor_id, first_name, last_name
 FROM actor
 WHERE first_name = 'Joe';
 ```
-+----------|------------|-----------+
-| actor_id | first_name | last_name |
-+----------|------------|-----------+
-|        9 | JOE        | SWANK     |
-+----------|------------|-----------+
 
 This will return rows **if and only if** the column value first_name holds the value 'Joe'
 
@@ -129,14 +111,6 @@ Additionally with string columns we can use the keyword `LIKE` and what is calle
 ```sql
 SELECT actor_id, first_name, last_name FROM actor WHERE last_name LIKE '%GEN%';
 ```
-+----------|------------|----------------+
-| actor_id | first_name | last_name |
-+----------|------------|----------------+
-|       14 | VIVIEN     | BERGEN    |
-|       41 | JODIE      | DEGENERES |
-|      107 | GINA       | DEGENERES |
-|      166 | NICK       | DEGENERES |
-+----------|------------|-----------------+
 The above query returns rows in the actor table where the last_name column values have _GEN_ somewhere in the last_name value. We would get values like this:
 
 ```table
@@ -183,17 +157,6 @@ Note the bellow query may seem correct but is likely not doing what you actually
 ```sql
 SELECT first_name, last_name FROM actor WHERE last_name LIKE 'A%' OR 'B%';
 ```
-+------------|-----------+
-| first_name | last_name |
-+------------|-----------+
-| CHRISTIAN  | AKROYD    |
-| KIRSTEN    | AKROYD    |
-| DEBBIE     | AKROYD    |
-| CUBA       | ALLEN     |
-| KIM        | ALLEN     |
-| MERYL      | ALLEN     |
-| ANGELINA   | ASTAIRE   |
-+------------|-----------+
 
 This won't match last names starting with B it instead is matching the pattern `LIKE 'A%'` and is confused as to what to do with 'B%'
 
@@ -203,11 +166,6 @@ You may want to do something like the bellow:
 SELECT country_id, country from country WHERE
 country = 'Afghanistan' OR 'Bangladesh' OR 'China';
 ```
-+------------|-------------+
-| country_id | country     |
-+------------|-------------+
-|          1 | Afghanistan |
-+------------|-------------+
 
 This will only output 'Afghanistan' instead to get the other two countries we should use `IN`
 
@@ -215,14 +173,6 @@ This will only output 'Afghanistan' instead to get the other two countries we sh
 SELECT country_id, country from country WHERE
 country IN('Afghanistan', 'Bangladesh','China');
 ```
-+------------|-------------+
-| country_id | country     |
-+------------|-------------+
-|          1 | Afghanistan |
-|         12 | Bangladesh  |
-|         23 | China       |
-+------------|-------------+
-
 
 ## Joining Tables
  The concept of joining a table is what makes a MySQL and other SQL variants what we term a *relational database*. When we join two tables we are telling MySQL to link up two tables. This allows us to cross reference information across different tables which in turn lets us modularize our tables. 
@@ -247,14 +197,6 @@ JOIN address a ON
 s.address_id = a.address_id;
 ```
 
- output: 
-+------------|-----------|----------------------+
-| first_name | last_name | address              |
-+------------|-----------|----------------------+
-| Mike       | Hillyer   | 23 Workhaven Lane    |
-| Jon        | Stephens  |1411 Lillydale Drive  |
-+------------|-----------|----------------------+
-
 Joins come in three main varieties, and basically differ on how they handle missing data. 
 Say for example from the above query there were staff records that don't have a corresponding
 address record (missing an address_id record or the record isn't in the other table). Should SQL return the staff first_name and last_name and leave the address line blank or should it leave the address line blank?
@@ -271,11 +213,6 @@ SQL has a wide variety of functions for aggregating data like excel. SUM, AVG, M
 SELECT SUM(payment.amount) AS 'Total Payments After 2006' FROM payment
 WHERE payment_date >= '2006-01-01';
 ```
-+-------------------------------+
-| Total Payments After 2006 |
-+-------------------------------+
-|                    514.18 |
-+-------------------------------+
 
 Say you wanted to summarize the average sale amount by store. Joining and including the store table the ordinary way will yield an error if left unmodified. What you need to do is specify GROUP BY constraints within your query. See the following: 
 ```sql
@@ -285,12 +222,6 @@ LEFT JOIN store on store.store_id = customer.store_id
 LEFT JOIN address on address.address_id = store.address_id
 GROUP BY address.address;
 ```
-+--------------------|----------------------------------+
-| address            |          Average Payments  |
-+--------------------|----------------------------------+
-| 28 MySQL Boulevard |                  4.165866 |
-| 47 MySakila Drive  |                  4.229712 |
-+--------------------|----------------------------------+
 
 The above query returns the Average payment amount *by store address*, MySQL knew to break it down in this manner because the address column in the address table has been fed into the GROUP BY statement. also note above how we Join multiple tables above, there really isn't any limit to the number of joins you can make in a single query, though things can get confusing if you take it to far. 
 
@@ -303,12 +234,6 @@ LEFT JOIN store on store.store_id = customer.store_id
 LEFT JOIN address on address.address_id = store.address_id
 GROUP BY address.address, address.district;
 ```
-+--------------------|----------|--------------------------+
-| address            | district | Average Payments |
-+--------------------|----------|--------------------------+
-| 28 MySQL Boulevard | QLD      |         4.165866 |
-| 47 MySakila Drive  | Alberta  |         4.229712 |
-+--------------------|----------|--------------------------+
 ## Subqueries 
 
 Subqueries refer to queries that get their results from other queries. In other words queries that query query results. One way to think of them, is a means breaking up queries into logical steps by creating on the fly tables you want to query without actually setting them up in the database. Typically one resorts to using subqueries when a succession of WHERE statements start to contridict each other or you simply can't figure out why a specific query isn't giving you the results you want
@@ -327,11 +252,6 @@ A subquery is defined by ( ) with the query being placed between the paranthesis
 ```sql
   SELECT language_id FROM language WHERE name = 'English';
 ```
-+-------------+
-| language_id |
-+-------------+
-|           1 |
-+-------------+
 
 Basically the results of the above query acts as fill in for the IN statement in the outer query. Basically it results in a final query that's the equivalent of this:
 ```sql
